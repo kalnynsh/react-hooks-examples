@@ -1,47 +1,24 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
+const MyContext = React.createContext();
+
 const App = () => {
+  const contextValue = "This is useContext in action";
+
   return (
-    <HookSwitcher />
+    <MyContext.Provider value={contextValue} >
+      <Child />
+    </MyContext.Provider >
   );
 };
 
-const HookSwitcher = () => {
-
-  const [ bgColor, setBgColor ] = useState('white');
-  const [ fontSize, setFontSize] = useState(14);
+const Child = () => {
+  const value = useContext(MyContext);
 
   return (
-    <div
-      style={{ padding: '5%', backgroundColor: bgColor, width: '33%' }}
-    >
-      <button
-        style={{marginRight: '2%', fontSize: `${fontSize}px`}}
-        onClick={ () => setBgColor('blue') }
-      >
-        Blue
-      </button>
-      <button
-        style={{marginRight: '2%', fontSize: `${fontSize}px`}}
-        onClick={ () => setBgColor('gray') }
-      >
-        Gray
-      </button>
-      <button
-        style={{marginRight: '2%', fontSize: `${fontSize}px`}}
-        onClick={ () => setFontSize((s) => s + 2)}
-      >
-        Font size up
-      </button>
-      <button
-        style={{fontSize: `${fontSize}px`}}
-        onClick={ () => setFontSize((s) => s - 2)}
-      >
-        Font size down
-      </button>
-    </div>
+    <p> {value} </p>
   );
 };
 
