@@ -1,4 +1,4 @@
-import React, { Component, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
@@ -23,8 +23,7 @@ const App = () => {
         >
             hide
           </button>
-          <ClassCounter value={value} />
-          <HookCounter value={value} />
+          <Notification value={value} />
       </div>
     );
   }
@@ -41,46 +40,27 @@ const App = () => {
   }
 };
 
-const HookCounter = ({ value }) => {
+const Notification = () => {
+  const message = (
+      <p>Notification message.</p>
+  );
 
-  // Component did mount with useEffect
+  const [visible, setVisibile] = useState(true);
+
   useEffect(() => {
-    console.log('Did mount with useEffect');
+    const timer = setTimeout(() => {
+      setVisibile(false)
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // useEffect(() => {
-  //   console.log('I am the useEffect function');
-
-  //   return () => console.log('clear');
-  // }, [ value ]);
-
   return (
-    <p> {value} </p>
+    <div>
+      { visible && message }
+    </div>
   );
 };
-
-class ClassCounter extends Component {
-
-  componentDidMount() {
-    console.log('class: mount');
-  }
-
-  componentDidUpdate(props) {
-    console.log('class: update');
-  }
-
-  componentWillUnmount() {
-    console.log('class: unmount');
-  }
-
-  render() {
-    const {value} = this.props;
-
-    return (
-      <p> {value} </p>
-    );
-  };
-}
 
 ReactDOM.render(
   <React.StrictMode>
