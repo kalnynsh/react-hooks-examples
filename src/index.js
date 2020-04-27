@@ -1,30 +1,39 @@
-import React, { Component, useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 
+const getBaseUrl = () => 'https://www.anapioficeandfire.com/api/characters';
+
 const App = () => {
-  const [value, setValue] = useState(0);
+  const [value, setValue] = useState(400);
   const [visible, setVisible] = useState(true);
 
   if (visible) {
     return (
       <div
-        style={{ margin: 'auto', padding: '2% 1%', backgroundColor: 'Beige', width: '30%' }}
+        style={{ margin: 'auto', padding: '2% 1%', backgroundColor: 'Beige', width: '40%' }}
       >
-        <button
-          style={{ padding: '2%', marginRight: '2%', backgroundColor: 'AntiqueWhite', width: '10%' }}
-          onClick={() => setValue((v) => v + 1)}
-        >
-          +
-        </button>
-        <button
-          style={{ padding: '2%', backgroundColor: 'DarkGoldenRod', width: '10%' }}
-          onClick={() => setVisible(false)}
-        >
-            hide
+        <div style={{ margin: '0 0 15px 0'}}>
+          <button
+            style={{ padding: '1.7% %2', marginRight: '2%', backgroundColor: 'AntiqueWhite', width: '10%' }}
+            onClick={() => setValue((v) => v + 1)}
+          >
+            +
           </button>
-          <ClassCounter value={value} />
-          <HookCounter value={value} />
+          <button
+            style={{ padding: '1.7% %2', marginRight: '2%', backgroundColor: 'AntiqueWhite', width: '10%' }}
+            onClick={() => setValue((v) => v - 1)}
+          >
+            -
+          </button>
+          <button
+            style={{ padding: '1.7% %2', backgroundColor: 'DarkGoldenRod', width: '10%' }}
+            onClick={() => setVisible(false)}
+          >
+              hide
+            </button>
+          </div>
+          <CharacterInfo id={value} />
       </div>
     );
   }
@@ -41,41 +50,94 @@ const App = () => {
   }
 };
 
-const HookCounter = ({ value }) => {
+const getCharacter = (id) => {
+  const baseUrl = getBaseUrl();
 
-  useEffect(() => {
-    console.log('I am the useEffect function');
-
-    return () => console.log('clear');
-  }, [ value ]);
-
-  return (
-    <p> {value} </p>
-  );
+  return fetch(baseUrl + '/' + id)
+    .then(result => result.json())
+    .then(data => data)
+    .catch(error => console.error(error))
+  ;
 };
 
-class ClassCounter extends Component {
+const useRequest = (request) => {
 
-  componentDidMount() {
-    console.log('class: mount');
+  const initialState = useMemo(() => ({
+    data: null,
+    error: null,
+    loading: true,
+  }), []);
+
+  const [dataState, setDataState] = useState(initialState);
+
+  useEffect(() => {
+    setDataState(initialState);
+
+    let cancelled = false;
+
+    request()
+      .then(data => !cancelled && setDataState({
+        data,
+        error: null,
+        loading: false,
+      }))
+      .catch(error => {
+        !cancelled
+        &&
+        setDataState({
+          data: null,
+          error,
+          loading: false,
+        });
+      })
+    ;
+
+    return () => cancelled = true;
+  }, [ request, initialState ]);
+
+  return dataState;
+};
+
+const useCharacterInfo = (id) => {
+  const request = useCallback(
+    () => getCharacter(id),
+    [ id ]
+  );
+
+  return useRequest(request);
+};
+
+const CharacterInfo = ({ id }) => {
+  const result = useCharacterInfo(id);
+
+  if (typeof result === 'undefined' || result === null) {
+    return <div>Fetching data ...</div>;
   }
 
-  componentDidUpdate(props) {
-    console.log('class: update');
+  const {data, loading, error} = result;
+
+  if (error) {
+    return <div>Something is wrong</div>;
   }
 
-  componentWillUnmount() {
-    console.log('class: unmount');
+  if (loading) {
+    return <div>Loading ...</div>;
   }
 
-  render() {
-    const {value} = this.props;
-
+  if (data) {
     return (
-      <p> {value} </p>
+      <div>
+        <ul>
+          <li>ID: {id}</li>
+          <li>name: {data.name}</li>
+          <li>gender: {data.gender}</li>
+          <li>born: {data.born}</li>
+          <li>died: {data.died}</li>
+        </ul>
+      </div>
     );
-  };
-}
+  }
+};
 
 ReactDOM.render(
   <React.StrictMode>
